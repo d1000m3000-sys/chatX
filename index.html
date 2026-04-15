@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatX</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#075E54">
+
+<style>
+body{margin:0;font-family:system-ui;background:#0b141a;color:white;}
+.header{background:#075E54;padding:15px;text-align:center;}
+#chatBox{height:75vh;overflow-y:auto;padding:10px;display:flex;flex-direction:column;}
+.msg{max-width:75%;padding:10px;margin:6px;border-radius:12px;}
+.me{background:#005c4b;align-self:flex-end;}
+.other{background:#202c33;align-self:flex-start;}
+.meta{font-size:11px;opacity:0.6;margin-top:5px;display:flex;justify-content:space-between;}
+#typing{padding-left:10px;font-size:12px;color:#25D366;}
+.inputArea{display:flex;padding:10px;}
+input{flex:1;padding:12px;border-radius:25px;border:none;}
+button{width:50px;margin-left:5px;border-radius:50%;border:none;background:#25D366;color:white;}
+</style>
+</head>
+
+<body>
+
+<div class="header">💬 ChatX</div>
+
+<div id="chatBox"></div>
+<div id="typing"></div>
+
+<div class="inputArea">
+  <input id="msgInput" placeholder="اكتب رسالة..." oninput="typingNow()">
+  <button onclick="sendMsg()">➤</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyA3o3CHKaORvCNlNpUCIU2MmaeVM6w_coo",
+  authDomain:"chatx-781cf.firebaseapp.com",
+  projectId:"chatx-781cf",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+let user=localStorage.getItem("user");
+if(!user){
+  user=prompt("اسمك:");
+  localStorage.setItem("user",user);
+}
+
+function formatTime(ts){
+  let d=new Date(ts);
+  return d.getHours()+":"+String(d.getMinutes()).padStart(2,'0');
+}
+
+function sendMsg(){
+  if(!msgInput.value.trim()) return;
+
+  db.collection("messages").add({
+    text:msgInput.value,
+    user:user,
+    time:Date.now()
+  });
+
+  msgInput.value="";
+}
+
+db.collection("messages").orderBy("time").onSnapshot(snap=>{
+  chatBox.innerHTML="";
+  snap.forEach(doc=>{
+    let d=doc.data();
+
+    let div=document.createElement("div");
+    div.className="msg";
+
+    div.innerHTML=`
+      <div>${d.text}</div>
+      <div class="meta">
+        <span>${d.user}</span>
+        <span>${formatTime(d.time)}</span>
+      </div>
+    `;
+
+    div.classList.add(d.user===user?"me":"other");
+
+    chatBox.appendChild(div);
+  });
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+function typingNow(){
+  db.collection("typing").doc("status").set({
+    user:user,
+    time:Date.now()
+  });
+}
+
+db.collection("typing").doc("status").onSnapshot(doc=>{
+  let d=doc.data();
+  if(!d) return;
+
+  if(d.user!==user && Date.now()-d.time<2000){
+    typing.innerText = d.user + " يكتب...";
+  }else{
+    typing.innerText="";
+  }
+});
+
+// PWA
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
