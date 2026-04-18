@@ -9,68 +9,56 @@
 <meta name="theme-color" content="#075E54">
 
 <style>
-:root{
-  --bg:#0b141a;
-  --card:#202c33;
-  --me:#005c4b;
-  --text:white;
-}
-
-/* Light mode */
-.light{
-  --bg:#f0f2f5;
-  --card:#e4e6eb;
-  --me:#25D366;
-  --text:black;
-}
-
-body{
-  margin:0;
-  font-family:system-ui;
-  background:var(--bg);
-  color:var(--text);
-}
+body{margin:0;font-family:system-ui;background:#0b141a;color:white;}
 
 .header{
   background:#075E54;
-  padding:12px;
+  padding:10px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  gap:10px;
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.status{
+  font-size:12px;
+  color:#25D366;
 }
 
 #chatBox{
-  height:75vh;
+  height:70vh;
   overflow-y:auto;
   padding:10px;
   display:flex;
   flex-direction:column;
-  background:#121b22; /* ثابت مريح */
 }
 
 .msg{
-  max-width:75%;
+  max-width:70%;
   padding:10px;
-  margin:6px;
+  margin:5px;
   border-radius:12px;
 }
 
 .me{
-  background:var(--me);
+  background:#005c4b;
   align-self:flex-end;
 }
 
 .other{
-  background:var(--card);
+  background:#202c33;
   align-self:flex-start;
 }
 
 .meta{
-  font-size:11px;
+  font-size:10px;
   opacity:0.6;
-  margin-top:5px;
-  display:flex;
-  justify-content:space-between;
 }
 
 .inputArea{
@@ -80,31 +68,18 @@ body{
 
 input{
   flex:1;
-  padding:12px;
-  border-radius:25px;
+  padding:10px;
+  border-radius:20px;
   border:none;
 }
 
-.sendBtn{
+button{
   width:45px;
-  height:45px;
-  border-radius:50%;
   border:none;
+  border-radius:50%;
   background:transparent;
   color:white;
-  font-size:20px;
-}
-
-/* top controls */
-.controls{
-  display:flex;
-  gap:5px;
-}
-
-select,button.top{
-  border:none;
-  padding:5px;
-  border-radius:5px;
+  font-size:18px;
 }
 </style>
 </head>
@@ -112,16 +87,10 @@ select,button.top{
 <body>
 
 <div class="header">
-  <div>💬 ChatX</div>
-
-  <div class="controls">
-    <button class="top" onclick="toggleMode()">🌓</button>
-
-    <select onchange="changeLang(this.value)">
-      <option value="ar">AR</option>
-      <option value="en">EN</option>
-      <option value="es">ES</option>
-    </select>
+  <img id="myAvatar" class="avatar">
+  <div>
+    <div id="myName"></div>
+    <div class="status" id="statusText">Online</div>
   </div>
 </div>
 
@@ -129,7 +98,7 @@ select,button.top{
 
 <div class="inputArea">
   <input id="msgInput" placeholder="اكتب رسالة...">
-  <button onclick="sendMsg()" class="sendBtn">✕</button>
+  <button onclick="sendMsg()">✕</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -146,55 +115,62 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-// user
-let user=localStorage.getItem("user");
-if(!user){
-  user=prompt("اسمك:");
-  localStorage.setItem("user",user);
+// 👤 user setup
+let userData = JSON.parse(localStorage.getItem("userData"));
+
+if(!userData){
+  let name = prompt("اسمك:");
+  let avatar = prompt("رابط صورة بروفايل (اختياري):");
+
+  userData = {
+    name:name,
+    avatar: avatar || "https://i.imgur.com/6VBx3io.png"
+  };
+
+  localStorage.setItem("userData", JSON.stringify(userData));
 }
 
-// notifications
+myName.innerText = userData.name;
+myAvatar.src = userData.avatar;
+
+// 🔵 online status
+function setOnline(){
+  db.collection("users").doc(userData.name).set({
+    online:true,
+    lastSeen:Date.now()
+  });
+}
+
+function setOffline(){
+  db.collection("users").doc(userData.name).update({
+    online:false,
+    lastSeen:Date.now()
+  });
+}
+
+window.addEventListener("focus", setOnline);
+window.addEventListener("blur", setOffline);
+
+// 🔔 notifications
 if("Notification" in window){
   Notification.requestPermission();
 }
 
-// language
-const langData={
-  ar:{placeholder:"اكتب رسالة..."},
-  en:{placeholder:"Type a message..."},
-  es:{placeholder:"Escribe un mensaje..."}
-};
-
-function changeLang(lang){
-  localStorage.setItem("lang",lang);
-  applyLang();
-}
-
-function applyLang(){
-  let lang=localStorage.getItem("lang")||"ar";
-  msgInput.placeholder=langData[lang].placeholder;
-}
-applyLang();
-
-// dark/light
-function toggleMode(){
-  document.body.classList.toggle("light");
-}
-
-// send
+// 📤 send
 function sendMsg(){
   if(!msgInput.value.trim()) return;
 
   db.collection("messages").add({
     text:msgInput.value,
-    user:user,
+    user:userData.name,
+    avatar:userData.avatar,
     time:Date.now()
   });
 
   msgInput.value="";
 }
 
-// load
+// 📥 load
 db.collection("messages").orderBy("time")
 .onSnapshot(snap=>{
 
@@ -207,14 +183,12 @@ db.collection("messages").orderBy("time")
     div.className="msg";
 
     div.innerHTML=`
+      <img src="${d.avatar}" style="width:25px;height:25px;border-radius:50%">
       <div>${d.text}</div>
-      <div class="meta">
-        <span>${d.user}</span>
-        <span>${new Date(d.time).toLocaleTimeString()}</span>
-      </div>
+      <div class="meta">${new Date(d.time).toLocaleTimeString()}</div>
     `;
 
-    div.classList.add(d.user===user?"me":"other");
+    div.classList.add(d.user===userData.name?"me":"other");
     chatBox.appendChild(div);
 
   });
@@ -222,7 +196,7 @@ db.collection("messages").orderBy("time")
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-// notifications (منفصلة)
+// 🔔 notify
 let lastTime=0;
 
 db.collection("messages")
@@ -232,12 +206,12 @@ db.collection("messages")
   snap.forEach(doc=>{
     let d=doc.data();
 
-    if(d.user!==user && d.time>lastTime){
+    if(d.user!==userData.name && d.time>lastTime){
       lastTime=d.time;
 
       if(Notification.permission==="granted"){
-        new Notification("ChatX",{
-          body:d.user+": "+d.text
+        new Notification(d.user,{
+          body:d.text
         });
       }
     }
