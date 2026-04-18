@@ -54,6 +54,11 @@ if(!user){
   localStorage.setItem("user",user);
 }
 
+// 🔔 طلب إذن الإشعارات
+if ("Notification" in window) {
+  Notification.requestPermission();
+}
+
 function formatTime(ts){
   let d=new Date(ts);
   return d.getHours()+":"+String(d.getMinutes()).padStart(2,'0');
@@ -73,6 +78,7 @@ function sendMsg(){
 
 db.collection("messages").orderBy("time").onSnapshot(snap=>{
   chatBox.innerHTML="";
+
   snap.forEach(doc=>{
     let d=doc.data();
 
@@ -88,13 +94,21 @@ db.collection("messages").orderBy("time").onSnapshot(snap=>{
     `;
 
     div.classList.add(d.user===user?"me":"other");
-
     chatBox.appendChild(div);
+
+    // 🔔 إشعار عند وصول رسالة
+    if(d.user !== user && Notification.permission === "granted"){
+      new Notification("رسالة جديدة",{
+        body: d.user + ": " + d.text
+      });
+    }
+
   });
 
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
+// typing
 function typingNow(){
   db.collection("typing").doc("status").set({
     user:user,
