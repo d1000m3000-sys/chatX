@@ -25,17 +25,6 @@ body{margin:0;font-family:system-ui;background:#0b141a;color:white;}
   cursor:pointer;
 }
 
-#settings{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#000000dd;
-  padding:20px;
-}
-
 #chatBox{
   height:70vh;
   overflow:auto;
@@ -51,10 +40,21 @@ body{margin:0;font-family:system-ui;background:#0b141a;color:white;}
 
 .me{background:#005c4b;}
 
+#settings{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#000000dd;
+  padding:20px;
+}
+
 input,textarea{
   width:100%;
-  margin:5px 0;
   padding:10px;
+  margin:5px 0;
 }
 
 button{
@@ -75,10 +75,10 @@ button{
 <input id="msgInput" placeholder="اكتب رسالة">
 <button onclick="sendMsg()">✕</button>
 
-<!-- ⚙️ الإعدادات -->
+<!-- الإعدادات -->
 <div id="settings">
   <h3>الإعدادات</h3>
-  <input id="newName" placeholder="اسمك">
+  <input id="newName" placeholder="الاسم">
   <input id="newAvatar" placeholder="رابط الصورة">
   <textarea id="bio" placeholder="الوصف"></textarea>
   <button onclick="saveProfile()">حفظ</button>
@@ -103,15 +103,17 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 const messaging=firebase.messaging();
 
-// 🔔 طلب إذن إشعارات
+// 🔔 طلب الإذن
 Notification.requestPermission();
 
-// 🔑 الحصول على token
-messaging.getToken().then(token=>{
+// 🔑 ربط VAPID KEY
+messaging.getToken({
+  vapidKey: "BAOv4k0lGNLQm5T6AZbjzjQdUVjhb4og0XcT71PJF-ocOiwYZiMaEkRSI0zCQk0EIFWHCH58BEMS6RXqb7jq8Cc"
+}).then((token)=>{
   console.log("TOKEN:",token);
 });
 
-// 👤 user
+// 👤 المستخدم
 let user=JSON.parse(localStorage.getItem("user"));
 
 if(!user){
@@ -140,18 +142,20 @@ function saveProfile(){
   user.bio=bio.value;
 
   localStorage.setItem("user",JSON.stringify(user));
-
   location.reload();
 }
 
 // إرسال
 function sendMsg(){
+  if(!msgInput.value.trim()) return;
+
   db.collection("messages").add({
     text:msgInput.value,
     user:user.name,
     avatar:user.avatar,
     time:Date.now()
   });
+
   msgInput.value="";
 }
 
@@ -161,6 +165,7 @@ db.collection("messages").orderBy("time")
   chatBox.innerHTML="";
   snap.forEach(doc=>{
     let d=doc.data();
+
     let div=document.createElement("div");
     div.className="msg";
 
@@ -176,12 +181,12 @@ db.collection("messages").orderBy("time")
   });
 });
 
-// foreground notify
+// 🔔 إشعار داخل التطبيق
 messaging.onMessage(payload=>{
   alert(payload.notification.title + "\\n" + payload.notification.body);
 });
 
-// PWA
+// تسجيل Service Worker
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js");
 }
