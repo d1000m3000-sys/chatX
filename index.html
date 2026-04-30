@@ -1,159 +1,320 @@
-<div class="chat-container" id="chatContainer">
-    <div class="status-message" data-en="Start chatting! 🚀" data-ar="ابدأ الدردشة! 🚀">Start chatting! 🚀</div>
-</div>
-
-<div class="input-container">
-    <input type="text" class="message-input" id="messageInput" placeholder="Type a message..." data-placeholder-en="Type a message..." data-placeholder-ar="اكتب رسالة..." onkeypress="handleKeyPress(event)">
-    <button class="send-button" onclick="sendMessage()" title="Send message" data-title-en="Send message" data-title-ar="إرسال رسالة"></button>
-</div>
-
-<script>
-    let currentLang = 'en';
-    let currentMode = 'dark';
-    let userName = '';
-
-    // Language translations
-    const translations = {
-        en: {
-            'ChatX': 'ChatX',
-            'Name:': 'Name:',
-            'Enter your name': 'Enter your name',
-            'العربية': 'العربية',
-            'English': 'English',
-            '🌙 Dark': '🌙 Dark',
-            '☀️ Light': '☀️ Light',
-            'Start chatting! 🚀': 'Start chatting! 🚀',
-            'Type a message...': 'Type a message...',
-            'Send message': 'Send message'
-        },
-        ar: {
-            'ChatX': 'ChatX',
-            'Name:': 'الاسم:',
-            'Enter your name': 'أدخل اسمك',
-            'العربية': 'English',
-            'English': 'العربية',
-            '🌙 Dark': '☀️ Light',
-            '☀️ Light': '🌙 Dark',
-            'Start chatting! 🚀': 'ابدأ الدردشة! 🚀',
-            'Type a message...': 'اكتب رسالة...',
-            'Send message': 'إرسال رسالة'
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="main-html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp UI Clone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Light Mode Colors */
+            --bg-body: #dadbd3;
+            --bg-header: #008069;
+            --bg-sidebar: #ffffff;
+            --bg-chat: #efeae2;
+            --text-main: #111b21;
+            --text-secondary: #667781;
+            --message-in: #ffffff;
+            --message-out: #d9fdd3;
+            --border-color: #e9edef;
         }
-    };
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        updateLanguage();
-        updateMode();
-        
-        // Set user name from input
-        document.getElementById('userName').addEventListener('input', function(e) {
-            userName = e.target.value || 'Anonymous';
-        });
-    });
-
-    function toggleLanguage() {
-        currentLang = currentLang === 'en' ? 'ar' : 'en';
-        document.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-        updateLanguage();
-    }
-
-    function toggleMode() {
-        currentMode = currentMode === 'dark' ? 'light' : 'dark';
-        updateMode();
-    }
-
-    function updateLanguage() {
-        document.documentElement.lang = currentLang;
-        
-        // Update all translatable elements
-        document.querySelectorAll('[data-en]').forEach(element => {
-            const key = element.getAttribute(`data-${currentLang}`);
-            if (key) {
-                element.textContent = key;
-            }
-        });
-        
-        // Update placeholders
-        document.querySelectorAll('[data-placeholder-en]').forEach(element => {
-            const placeholder = element.getAttribute(`data-placeholder-${currentLang}`);
-            if (placeholder) {
-                element.placeholder = placeholder;
-            }
-        });
-        
-        // Update titles
-        document.querySelectorAll('[data-title-en]').forEach(element => {
-            const title = element.getAttribute(`data-title-${currentLang}`);
-            if (title) {
-                element.title = title;
-            }
-        });
-    }
-
-    function updateMode() {
-        if (currentMode === 'light') {
-            document.body.classList.add('light-mode');
-        } else {
-            document.body.classList.remove('light-mode');
+        [data-theme="dark"] {
+            /* Dark Mode Colors */
+            --bg-body: #0b141a;
+            --bg-header: #202c33;
+            --bg-sidebar: #111b21;
+            --bg-chat: #0b141a;
+            --text-main: #e9edef;
+            --text-secondary: #8696a0;
+            --message-in: #202c33;
+            --message-out: #005c4b;
+            --border-color: #222d34;
         }
-    }
 
-    function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const message = input.value.trim();
-        
-        if (message) {
-            addMessage(message, true);
-            input.value = '';
-            
-            // Simulate response after 1 second
-            setTimeout(() => {
-                const responses = [
-                    "Great message! 💬",
-                    "I understand what you mean. 🤔",
-                    "Thanks for sharing! 👍",
-                    "Interesting point! 🌟",
-                    "I agree with you. ✅"
-                ];
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                addMessage(randomResponse, false);
-            }, 1000);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
         }
-    }
 
-    function addMessage(text, isSent) {
-        const chatContainer = document.getElementById('chatContainer');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-        
-        const time = new Date().toLocaleTimeString(currentLang === 'ar' ? 'ar-SA' : 'en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        const senderName = isSent ? (userName || 'You') : 'ChatX';
-        const senderNameAr = isSent ? (userName || 'أنت') : 'ChatX';
-        
-        messageDiv.innerHTML = `
-            <div>$${text}</div>
-            <div class="message-time">
-                $${currentLang === 'en' ? senderName : senderNameAr} • ${time}
+        body {
+            background-color: var(--bg-body);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1600px;
+            height: 95vh;
+            background: var(--bg-sidebar);
+            display: flex;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 30%;
+            min-width: 300px;
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 60px;
+            background: var(--bg-header);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .header-icons i {
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #aebac1;
+        }
+
+        .search-container {
+            padding: 8px 12px;
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-box {
+            background: var(--border-color);
+            border-radius: 8px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 5px;
+            color: var(--text-main);
+        }
+
+        /* Chat List */
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .chat-item:hover { background: var(--border-color); }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #ccc;
+            margin-left: 15px;
+        }
+
+        .chat-info { flex: 1; }
+        .chat-top { display: flex; justify-content: space-between; }
+        .chat-name { font-weight: 500; color: var(--text-main); }
+        .chat-time { font-size: 0.75rem; color: var(--text-secondary); }
+        .chat-msg { font-size: 0.85rem; color: var(--text-secondary); margin-top: 3px; }
+
+        /* Main Chat Area */
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-chat);
+            position: relative;
+        }
+
+        .chat-header {
+            height: 60px;
+            background: var(--bg-header);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .messages-area {
+            flex: 1;
+            padding: 20px 5%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bubble {
+            max-width: 65%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .sent {
+            align-self: flex-start;
+            background: var(--message-out);
+            color: #111b21;
+        }
+
+        .received {
+            align-self: flex-end;
+            background: var(--message-in);
+            color: var(--text-main);
+        }
+
+        .input-area {
+            height: 62px;
+            background: var(--bg-header);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-box {
+            flex: 1;
+            background: var(--bg-sidebar);
+            border-radius: 25px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+        }
+
+        /* RTL/LTR Logic */
+        [dir="ltr"] .avatar { margin-left: 0; margin-right: 15px; }
+        [dir="ltr"] .sent { align-self: flex-end; }
+        [dir="ltr"] .received { align-self: flex-start; }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="header">
+                <div class="avatar" style="background: url('https://via.placeholder.com/45') center/cover;"></div>
+                <div class="header-icons">
+                    <i class="fas fa-circle-notch"></i>
+                    <i class="fas fa-comment-alt"></i>
+                    <i class="fas fa-ellipsis-v" onclick="toggleMenu()"></i>
+                </div>
             </div>
-        `;
-        
-        // Remove status message if it exists
-        const statusMessage = chatContainer.querySelector('.status-message');
-        if (statusMessage) {
-            statusMessage.remove();
-        }
-        
-        chatContainer.appendChild(messageDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
 
-    function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            sendMessage();
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search" style="color: var(--text-secondary);"></i>
+                    <input type="text" placeholder="بحث أو بدء دردشة جديدة" id="search-input">
+                </div>
+            </div>
+
+            <div class="chat-list" id="chat-list">
+                <div class="chat-item">
+                    <div class="avatar" style="background: #25d366;"></div>
+                    <div class="chat-info">
+                        <div class="chat-top">
+                            <span class="chat-name">فريق الدعم</span>
+                            <span class="chat-time">١٢:٣٠ م</span>
+                        </div>
+                        <div class="chat-msg">مرحباً بك في تجربة واتساب الجديدة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-chat">
+            <div class="chat-header">
+                <div class="avatar" style="background: #25d366;"></div>
+                <div style="flex:1">
+                    <div style="font-weight: 500;">فريق الدعم</div>
+                    <div style="font-size: 0.75rem; opacity: 0.8;">متصل الآن</div>
+                </div>
+                <div class="header-icons">
+                    <i class="fas fa-moon" onclick="toggleDarkMode()" title="Dark/Light Mode"></i>
+                    <i class="fas fa-language" onclick="toggleLanguage()" title="Change Language"></i>
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-paperclip"></i>
+                </div>
+            </div>
+
+            <div class="messages-area" id="msg-area">
+                <div class="bubble received">أهلاً بك! هذا التصميم يدعم الوضع الليلي.</div>
+                <div class="bubble sent">رائع! وكيف يمكنني تغيير اللغة؟</div>
+                <div class="bubble received">فقط اضغط على أيقونة اللغة في الأعلى للتبديل بين العربية والإنجليزية.</div>
+            </div>
+
+            <div class="input-area">
+                <i class="far fa-smile" style="font-size: 1.5rem; color: #aebac1; cursor: pointer;"></i>
+                <input type="text" class="input-box" placeholder="اكتب رسالة" id="message-input">
+                <i class="fas fa-microphone" style="font-size: 1.3rem; color: #aebac1; cursor: pointer;"></i>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const htmlEl = document.getElementById('main-html');
+        const bodyEl = document.body;
+        const searchInput = document.getElementById('search-input');
+        const messageInput = document.getElementById('message-input');
+
+        // Toggle Dark Mode
+        function toggleDarkMode() {
+            const currentTheme = bodyEl.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            bodyEl.setAttribute('data-theme', newTheme);
         }
-    }
-</script>
+
+        // Toggle Language & RTL/LTR
+        function toggleLanguage() {
+            const currentDir = htmlEl.getAttribute('dir');
+            if (currentDir === 'rtl') {
+                htmlEl.setAttribute('dir', 'ltr');
+                htmlEl.setAttribute('lang', 'en');
+                searchInput.placeholder = "Search or start new chat";
+                messageInput.placeholder = "Type a message";
+            } else {
+                htmlEl.setAttribute('dir', 'rtl');
+                htmlEl.setAttribute('lang', 'ar');
+                searchInput.placeholder = "بحث أو بدء دردشة جديدة";
+                messageInput.placeholder = "اكتب رسالة";
+            }
+        }
+
+        // Send Message Simulation
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && messageInput.value.trim() !== "") {
+                const msgArea = document.getElementById('msg-area');
+                const newMsg = document.createElement('div');
+                newMsg.className = 'bubble sent';
+                newMsg.textContent = messageInput.value;
+                msgArea.appendChild(newMsg);
+                messageInput.value = "";
+                msgArea.scrollTop = msgArea.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
