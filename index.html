@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ChatX</title>
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#075e54">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <style>
@@ -108,7 +111,7 @@ font-size:18px;
 
 <script>
 
-// 🔥 Firebase Config
+// Firebase
 const firebaseConfig={
 apiKey:"AIzaSyA3o3CHKaORvCNlNpUCIU2MmaeVM6w_coo",
 authDomain:"chatx-781cf.firebaseapp.com",
@@ -118,19 +121,19 @@ projectId:"chatx-781cf"
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-// 👤 user
+// user
 let user=localStorage.getItem("user");
 if(!user){
 user="User_"+Math.floor(Math.random()*9999);
 localStorage.setItem("user",user);
 }
 
-// 🌗 mode
+// dark mode
 function toggleMode(){
 document.body.classList.toggle("dark");
 }
 
-// 📤 send
+// send
 function send(){
 let text=msg.value;
 if(!text.trim()) return;
@@ -144,7 +147,7 @@ time:Date.now()
 msg.value="";
 }
 
-// 📥 receive
+// receive
 db.collection("messages")
 .orderBy("time")
 .onSnapshot(snap=>{
@@ -167,8 +170,12 @@ chat.appendChild(div);
 chat.scrollTop=chat.scrollHeight;
 });
 
+// 🔥 تسجيل Service Worker
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+
 </script>
 
 </body>
 </html>
-
