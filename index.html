@@ -2,318 +2,241 @@
 <html lang="ar" dir="rtl" id="main-html">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp UI Clone</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WhatsApp PWA UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            /* Light Mode Colors */
-            --bg-body: #dadbd3;
-            --bg-header: #008069;
+            --whatsapp-green: #008069;
+            --whatsapp-light-green: #25d366;
+            --bg-body: #f0f2f5;
             --bg-sidebar: #ffffff;
-            --bg-chat: #efeae2;
+            --bg-chat-area: #efeae2;
             --text-main: #111b21;
             --text-secondary: #667781;
-            --message-in: #ffffff;
-            --message-out: #d9fdd3;
-            --border-color: #e9edef;
+            --msg-out: #d9fdd3;
+            --msg-in: #ffffff;
+            --border: #e9edef;
+            --header-bg: #f0f2f5;
         }
 
         [data-theme="dark"] {
-            /* Dark Mode Colors */
             --bg-body: #0b141a;
-            --bg-header: #202c33;
             --bg-sidebar: #111b21;
-            --bg-chat: #0b141a;
+            --bg-chat-area: #0b141a;
             --text-main: #e9edef;
             --text-secondary: #8696a0;
-            --message-in: #202c33;
-            --message-out: #005c4b;
-            --border-color: #222d34;
+            --msg-out: #005c4b;
+            --msg-in: #202c33;
+            --border: #222d34;
+            --header-bg: #202c33;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto', sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body { background-color: var(--bg-body); height: 100vh; overflow: hidden; display: flex; justify-content: center; }
+
+        .app-wrapper { width: 100%; max-width: 1600px; height: 100vh; display: flex; background: var(--bg-sidebar); }
+
+        /* Sidebar & Navigation */
+        .sidebar { width: 35%; border-left: 1px solid var(--border); display: flex; flex-direction: column; position: relative; }
+        
+        .header { height: 60px; background: var(--header-bg); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .header i { color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; margin-left: 15px; }
+
+        .chat-list { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        .chat-item { display: flex; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: 0.3s; }
+        .chat-item:hover { background: var(--header-bg); }
+
+        /* Floating Navigation Bar (Mobile Style) */
+        .bottom-nav {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            width: 90%; background: var(--whatsapp-green); border-radius: 30px;
+            display: flex; justify-content: space-around; padding: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 100;
+        }
+        .nav-item { color: white; text-align: center; font-size: 0.7rem; cursor: pointer; }
+        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+
+        /* Main Chat Window */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat-area); }
+        .chat-view { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        
+        .bubble { max-width: 70%; padding: 8px 12px; border-radius: 10px; margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .sent { align-self: flex-start; background: var(--msg-out); border-top-right-radius: 0; }
+        .received { align-self: flex-end; background: var(--msg-in); border-top-left-radius: 0; color: var(--text-main); }
+
+        /* Input Area with Paper Plane */
+        .input-bar { padding: 10px 16px; display: flex; align-items: center; background: var(--header-bg); }
+        .input-container { flex: 1; background: var(--bg-sidebar); border-radius: 20px; padding: 5px 15px; margin: 0 10px; }
+        .input-container input { width: 100%; border: none; outline: none; background: transparent; color: var(--text-main); height: 35px; }
+        
+        .send-btn { 
+            width: 45px; height: 45px; border-radius: 50%; background: var(--whatsapp-green); 
+            display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: 0.2s;
+        }
+        .send-btn:active { transform: scale(0.9); }
+
+        /* Settings Modal */
+        #settings-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;
+        }
+        .modal-content { background: var(--bg-sidebar); width: 300px; padding: 20px; border-radius: 15px; color: var(--text-main); }
+        .modal-content h3 { margin-bottom: 15px; }
+        .setting-row { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+        .close-btn { background: var(--whatsapp-green); color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; }
+
+        /* Responsive Logic */
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; }
+            .main-content { display: none; } /* Hide chat on mobile by default */
+            .app-wrapper { height: 100vh; }
         }
 
-        body {
-            background-color: var(--bg-body);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 1600px;
-            height: 95vh;
-            background: var(--bg-sidebar);
-            display: flex;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: 30%;
-            min-width: 300px;
-            border-left: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            height: 60px;
-            background: var(--bg-header);
-            padding: 10px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-
-        .header-icons i {
-            margin: 0 10px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            color: #aebac1;
-        }
-
-        .search-container {
-            padding: 8px 12px;
-            background: var(--bg-sidebar);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .search-box {
-            background: var(--border-color);
-            border-radius: 8px;
-            padding: 6px 14px;
-            display: flex;
-            align-items: center;
-        }
-
-        .search-box input {
-            background: transparent;
-            border: none;
-            outline: none;
-            width: 100%;
-            padding: 5px;
-            color: var(--text-main);
-        }
-
-        /* Chat List */
-        .chat-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .chat-item {
-            display: flex;
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
-        }
-
-        .chat-item:hover { background: var(--border-color); }
-
-        .avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: #ccc;
-            margin-left: 15px;
-        }
-
-        .chat-info { flex: 1; }
-        .chat-top { display: flex; justify-content: space-between; }
-        .chat-name { font-weight: 500; color: var(--text-main); }
-        .chat-time { font-size: 0.75rem; color: var(--text-secondary); }
-        .chat-msg { font-size: 0.85rem; color: var(--text-secondary); margin-top: 3px; }
-
-        /* Main Chat Area */
-        .main-chat {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-chat);
-            position: relative;
-        }
-
-        .chat-header {
-            height: 60px;
-            background: var(--bg-header);
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            color: white;
-        }
-
-        .messages-area {
-            flex: 1;
-            padding: 20px 5%;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .bubble {
-            max-width: 65%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            position: relative;
-            line-height: 1.4;
-        }
-
-        .sent {
-            align-self: flex-start;
-            background: var(--message-out);
-            color: #111b21;
-        }
-
-        .received {
-            align-self: flex-end;
-            background: var(--message-in);
-            color: var(--text-main);
-        }
-
-        .input-area {
-            height: 62px;
-            background: var(--bg-header);
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-box {
-            flex: 1;
-            background: var(--bg-sidebar);
-            border-radius: 25px;
-            padding: 10px 20px;
-            margin: 0 10px;
-            border: none;
-            outline: none;
-            color: var(--text-main);
-        }
-
-        /* RTL/LTR Logic */
-        [dir="ltr"] .avatar { margin-left: 0; margin-right: 15px; }
+        /* Direction specific tweaks */
         [dir="ltr"] .sent { align-self: flex-end; }
         [dir="ltr"] .received { align-self: flex-start; }
     </style>
 </head>
 <body data-theme="light">
 
-    <div class="app-container">
+    <div class="app-wrapper">
         <div class="sidebar">
             <div class="header">
-                <div class="avatar" style="background: url('https://via.placeholder.com/45') center/cover;"></div>
-                <div class="header-icons">
-                    <i class="fas fa-circle-notch"></i>
-                    <i class="fas fa-comment-alt"></i>
-                    <i class="fas fa-ellipsis-v" onclick="toggleMenu()"></i>
+                <div style="display:flex; align-items:center;">
+                    <img src="https://ui-avatars.com/api/?name=User&background=random" style="width:40px; border-radius:50%; margin-left:10px;">
                 </div>
-            </div>
-
-            <div class="search-container">
-                <div class="search-box">
-                    <i class="fas fa-search" style="color: var(--text-secondary);"></i>
-                    <input type="text" placeholder="بحث أو بدء دردشة جديدة" id="search-input">
+                <div class="header-icons">
+                    <i class="fas fa-cog" onclick="openSettings()"></i>
+                    <i class="fas fa-ellipsis-v"></i>
                 </div>
             </div>
 
             <div class="chat-list" id="chat-list">
                 <div class="chat-item">
-                    <div class="avatar" style="background: #25d366;"></div>
-                    <div class="chat-info">
-                        <div class="chat-top">
-                            <span class="chat-name">فريق الدعم</span>
-                            <span class="chat-time">١٢:٣٠ م</span>
+                    <img src="https://ui-avatars.com/api/?name=Support&background=008069&color=fff" style="width:50px; height:50px; border-radius:50%; margin-left:15px;">
+                    <div style="flex:1">
+                        <div style="display:flex; justify-content:space-between;">
+                            <b style="color:var(--text-main)">فريق الدعم</b>
+                            <span style="font-size:0.7rem; color:var(--text-secondary)">١٠:٠٠ ص</span>
                         </div>
-                        <div class="chat-msg">مرحباً بك في تجربة واتساب الجديدة</div>
+                        <p style="font-size:0.85rem; color:var(--text-secondary)">مرحباً بك! كيف يمكننا مساعدتك؟</p>
                     </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <i class="fas fa-comment"></i>
+                    <span>الدردشات</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-plus-circle" style="font-size: 1.5rem;"></i>
+                    <span>بدء دردشة</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-phone"></i>
+                    <span>المكالمات</span>
                 </div>
             </div>
         </div>
 
-        <div class="main-chat">
-            <div class="chat-header">
-                <div class="avatar" style="background: #25d366;"></div>
-                <div style="flex:1">
-                    <div style="font-weight: 500;">فريق الدعم</div>
-                    <div style="font-size: 0.75rem; opacity: 0.8;">متصل الآن</div>
-                </div>
-                <div class="header-icons">
-                    <i class="fas fa-moon" onclick="toggleDarkMode()" title="Dark/Light Mode"></i>
-                    <i class="fas fa-language" onclick="toggleLanguage()" title="Change Language"></i>
-                    <i class="fas fa-search"></i>
-                    <i class="fas fa-paperclip"></i>
+        <div class="main-content">
+            <div class="header">
+                <div style="display:flex; align-items:center;">
+                    <img src="https://ui-avatars.com/api/?name=Support" style="width:40px; border-radius:50%; margin-left:10px;">
+                    <div>
+                        <div style="font-weight:600; color:var(--text-main)">فريق الدعم</div>
+                        <div style="font-size:0.7rem; color:var(--whatsapp-light-green)">متصل الآن</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="messages-area" id="msg-area">
-                <div class="bubble received">أهلاً بك! هذا التصميم يدعم الوضع الليلي.</div>
-                <div class="bubble sent">رائع! وكيف يمكنني تغيير اللغة؟</div>
-                <div class="bubble received">فقط اضغط على أيقونة اللغة في الأعلى للتبديل بين العربية والإنجليزية.</div>
+            <div class="chat-view" id="chat-view">
+                <div class="bubble received">أهلاً! جرب إرسال رسالة الآن.</div>
             </div>
 
-            <div class="input-area">
-                <i class="far fa-smile" style="font-size: 1.5rem; color: #aebac1; cursor: pointer;"></i>
-                <input type="text" class="input-box" placeholder="اكتب رسالة" id="message-input">
-                <i class="fas fa-microphone" style="font-size: 1.3rem; color: #aebac1; cursor: pointer;"></i>
+            <div class="input-bar">
+                <i class="far fa-smile" style="color:var(--text-secondary); font-size:1.5rem; cursor:pointer;"></i>
+                <div class="input-container">
+                    <input type="text" id="msg-input" placeholder="اكتب رسالة...">
+                </div>
+                <div class="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
             </div>
         </div>
     </div>
 
+    <div id="settings-modal">
+        <div class="modal-content">
+            <h3>الإعدادات</h3>
+            <div class="setting-row">
+                <span>الوضع الليلي</span>
+                <input type="checkbox" id="dark-mode-toggle" onchange="toggleDark()">
+            </div>
+            <div class="setting-row">
+                <span>اللغة</span>
+                <select id="lang-select" onchange="changeLang()" style="padding:5px;">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <button class="close-btn" onclick="closeSettings()">حفظ وإغلاق</button>
+        </div>
+    </div>
+
     <script>
-        const htmlEl = document.getElementById('main-html');
-        const bodyEl = document.body;
-        const searchInput = document.getElementById('search-input');
-        const messageInput = document.getElementById('message-input');
+        const chatView = document.getElementById('chat-view');
+        const msgInput = document.getElementById('msg-input');
+        const html = document.getElementById('main-html');
+        const modal = document.getElementById('settings-modal');
 
-        // Toggle Dark Mode
-        function toggleDarkMode() {
-            const currentTheme = bodyEl.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            bodyEl.setAttribute('data-theme', newTheme);
+        function sendMessage() {
+            if (msgInput.value.trim() === "") return;
+            
+            const div = document.createElement('div');
+            div.className = 'bubble sent';
+            div.textContent = msgInput.value;
+            chatView.appendChild(div);
+            
+            msgInput.value = "";
+            chatView.scrollTop = chatView.scrollHeight;
         }
 
-        // Toggle Language & RTL/LTR
-        function toggleLanguage() {
-            const currentDir = htmlEl.getAttribute('dir');
-            if (currentDir === 'rtl') {
-                htmlEl.setAttribute('dir', 'ltr');
-                htmlEl.setAttribute('lang', 'en');
-                searchInput.placeholder = "Search or start new chat";
-                messageInput.placeholder = "Type a message";
+        // Handle Enter Key
+        msgInput.addEventListener("keyup", function(event) {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        function openSettings() { modal.style.display = 'flex'; }
+        function closeSettings() { modal.style.display = 'none'; }
+
+        function toggleDark() {
+            const isDark = document.getElementById('dark-mode-toggle').checked;
+            document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        }
+
+        function changeLang() {
+            const lang = document.getElementById('lang-select').value;
+            if (lang === 'en') {
+                html.setAttribute('dir', 'ltr');
+                html.setAttribute('lang', 'en');
+                msgInput.placeholder = "Type a message...";
             } else {
-                htmlEl.setAttribute('dir', 'rtl');
-                htmlEl.setAttribute('lang', 'ar');
-                searchInput.placeholder = "بحث أو بدء دردشة جديدة";
-                messageInput.placeholder = "اكتب رسالة";
+                html.setAttribute('dir', 'rtl');
+                html.setAttribute('lang', 'ar');
+                msgInput.placeholder = "اكتب رسالة...";
             }
         }
 
-        // Send Message Simulation
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && messageInput.value.trim() !== "") {
-                const msgArea = document.getElementById('msg-area');
-                const newMsg = document.createElement('div');
-                newMsg.className = 'bubble sent';
-                newMsg.textContent = messageInput.value;
-                msgArea.appendChild(newMsg);
-                messageInput.value = "";
-                msgArea.scrollTop = msgArea.scrollHeight;
-            }
+        // PWA Ready: Basic Scroll Fix for Mobile
+        window.addEventListener('resize', () => {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
         });
     </script>
 </body>
