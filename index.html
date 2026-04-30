@@ -6,7 +6,6 @@
 <title>ChatX</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#075E54">
 
 <style>
 :root{
@@ -16,7 +15,6 @@
   --text:white;
 }
 
-/* Light mode */
 .light{
   --bg:#f0f2f5;
   --card:#e4e6eb;
@@ -33,45 +31,45 @@ body{
 
 .header{
   background:#075E54;
-  padding:12px;
+  padding:10px;
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
 
+.profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  cursor:pointer;
+}
+
 #chatBox{
-  height:75vh;
-  overflow-y:auto;
+  height:70vh;
+  overflow:auto;
   padding:10px;
   display:flex;
   flex-direction:column;
-  background:#121b22; /* ثابت مريح */
+  background:#121b22;
 }
 
 .msg{
   max-width:75%;
   padding:10px;
-  margin:6px;
+  margin:5px;
   border-radius:12px;
 }
 
-.me{
-  background:var(--me);
-  align-self:flex-end;
-}
+.me{background:var(--me);align-self:flex-end;}
+.other{background:var(--card);align-self:flex-start;}
 
-.other{
-  background:var(--card);
-  align-self:flex-start;
-}
-
-.meta{
-  font-size:11px;
-  opacity:0.6;
-  margin-top:5px;
-  display:flex;
-  justify-content:space-between;
-}
+.meta{font-size:10px;opacity:0.6;}
 
 .inputArea{
   display:flex;
@@ -80,31 +78,39 @@ body{
 
 input{
   flex:1;
-  padding:12px;
-  border-radius:25px;
+  padding:10px;
+  border-radius:20px;
   border:none;
 }
 
 .sendBtn{
   width:45px;
   height:45px;
-  border-radius:50%;
   border:none;
-  background:transparent;
+  border-radius:50%;
+  background:#25D366;
   color:white;
-  font-size:20px;
+  font-size:18px;
 }
 
-/* top controls */
 .controls{
   display:flex;
   gap:5px;
 }
 
-select,button.top{
-  border:none;
-  padding:5px;
-  border-radius:5px;
+#settings{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#000000dd;
+  padding:20px;
+}
+
+textarea{
+  width:100%;
 }
 </style>
 </head>
@@ -112,11 +118,13 @@ select,button.top{
 <body>
 
 <div class="header">
-  <div>💬 ChatX</div>
+  <div class="profile">
+    <img id="avatar" class="avatar">
+    <div id="name"></div>
+  </div>
 
   <div class="controls">
-    <button class="top" onclick="toggleMode()">🌓</button>
-
+    <button onclick="toggleMode()">🌓</button>
     <select onchange="changeLang(this.value)">
       <option value="ar">AR</option>
       <option value="en">EN</option>
@@ -128,8 +136,18 @@ select,button.top{
 <div id="chatBox"></div>
 
 <div class="inputArea">
-  <input id="msgInput" placeholder="اكتب رسالة...">
-  <button onclick="sendMsg()" class="sendBtn">✕</button>
+  <input id="msgInput">
+  <button onclick="sendMsg()" class="sendBtn">✈️</button>
+</div>
+
+<!-- settings -->
+<div id="settings">
+  <h3>الإعدادات</h3>
+  <input id="newName" placeholder="اسمك">
+  <input id="newAvatar" placeholder="رابط الصورة">
+  <textarea id="bio" placeholder="الوصف"></textarea>
+  <button onclick="saveProfile()">حفظ</button>
+  <button onclick="settings.style.display='none'">إغلاق</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -147,36 +165,42 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
 // user
-let user=localStorage.getItem("user");
+let user=JSON.parse(localStorage.getItem("user"));
+
 if(!user){
-  user=prompt("اسمك:");
-  localStorage.setItem("user",user);
+  user={name:prompt("اسمك"),avatar:"",bio:""};
+  localStorage.setItem("user",JSON.stringify(user));
 }
 
-// notifications
-if("Notification" in window){
-  Notification.requestPermission();
+name.innerText=user.name;
+avatar.src=user.avatar||"https://i.imgur.com/6VBx3io.png";
+
+// settings
+avatar.onclick=()=>settings.style.display="block";
+
+function saveProfile(){
+  user.name=newName.value||user.name;
+  user.avatar=newAvatar.value||user.avatar;
+  user.bio=bio.value;
+  localStorage.setItem("user",JSON.stringify(user));
+  location.reload();
 }
 
 // language
-const langData={
-  ar:{placeholder:"اكتب رسالة..."},
-  en:{placeholder:"Type a message..."},
-  es:{placeholder:"Escribe un mensaje..."}
+const lang={
+  ar:"اكتب رسالة...",
+  en:"Type message...",
+  es:"Escribe..."
 };
 
-function changeLang(lang){
-  localStorage.setItem("lang",lang);
-  applyLang();
+function changeLang(l){
+  localStorage.setItem("lang",l);
+  msgInput.placeholder=lang[l];
 }
 
-function applyLang(){
-  let lang=localStorage.getItem("lang")||"ar";
-  msgInput.placeholder=langData[lang].placeholder;
-}
-applyLang();
+msgInput.placeholder=lang[localStorage.getItem("lang")||"ar"];
 
-// dark/light
+// dark mode
 function toggleMode(){
   document.body.classList.toggle("light");
 }
@@ -187,7 +211,8 @@ function sendMsg(){
 
   db.collection("messages").add({
     text:msgInput.value,
-    user:user,
+    user:user.name,
+    avatar:user.avatar,
     time:Date.now()
   });
 
@@ -197,9 +222,7 @@ function sendMsg(){
 // load
 db.collection("messages").orderBy("time")
 .onSnapshot(snap=>{
-
   chatBox.innerHTML="";
-
   snap.forEach(doc=>{
     let d=doc.data();
 
@@ -208,22 +231,22 @@ db.collection("messages").orderBy("time")
 
     div.innerHTML=`
       <div>${d.text}</div>
-      <div class="meta">
-        <span>${d.user}</span>
-        <span>${new Date(d.time).toLocaleTimeString()}</span>
-      </div>
+      <div class="meta">${d.user} - ${new Date(d.time).toLocaleTimeString()}</div>
     `;
 
-    div.classList.add(d.user===user?"me":"other");
+    div.classList.add(d.user===user.name?"me":"other");
     chatBox.appendChild(div);
-
   });
 
-  chatBox.scrollTop = chatBox.scrollHeight;
+  chatBox.scrollTop=chatBox.scrollHeight;
 });
 
-// notifications (منفصلة)
-let lastTime=0;
+// notifications
+if("Notification" in window){
+  Notification.requestPermission();
+}
+
+let last=0;
 
 db.collection("messages")
 .orderBy("time","desc")
@@ -231,9 +254,8 @@ db.collection("messages")
 .onSnapshot(snap=>{
   snap.forEach(doc=>{
     let d=doc.data();
-
-    if(d.user!==user && d.time>lastTime){
-      lastTime=d.time;
+    if(d.user!==user.name && d.time>last){
+      last=d.time;
 
       if(Notification.permission==="granted"){
         new Notification("ChatX",{
