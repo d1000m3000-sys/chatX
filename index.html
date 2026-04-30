@@ -86,7 +86,6 @@
 
         .message { display: flex; flex-direction: column; max-width: 85%; }
         
-        /* اتجاه الرسائل بناءً على المرسل */
         .message.user { align-self: flex-end; }
         .message.bot { align-self: flex-start; }
 
@@ -116,7 +115,6 @@
             border-radius: 50%; color: white; cursor: pointer;
         }
 
-        /* Modal Styles */
         .modal {
             display: none; position: fixed; inset: 0;
             background: var(--modal-bg); z-index: 1000;
@@ -156,13 +154,9 @@
             width: 100%; margin-top: 15px; padding: 10px;
             background: var(--bg-header); color: white; border: none; border-radius: 10px;
         }
-
-        /* LTR adjustments */
-        html[dir="ltr"] .user { align-self: flex-end; }
-        html[dir="ltr"] .bot { align-self: flex-start; }
     </style>
 </head>
-<body class="">
+<body>
 
 <div class="app">
     <div class="chat-header">
@@ -228,14 +222,12 @@
     let currentLang = localStorage.getItem('lang') || 'ar';
     let isDark = localStorage.getItem('theme') === 'dark';
 
-    // DOM Elements
     const msgInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const msgContainer = document.getElementById('messagesContainer');
     const themeToggle = document.getElementById('themeToggleBtn');
     const langSelect = document.getElementById('languageSelect');
 
-    // Initialize
     function init() {
         applyTheme();
         applyLanguage();
@@ -244,7 +236,6 @@
         }
     }
 
-    // Send Message Logic
     function addMessage(text, sender) {
         if(!text.trim()) return;
         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -263,15 +254,12 @@
         if(text) {
             addMessage(text, 'user');
             msgInput.value = '';
-            // Simple Auto Reply
-            setTimeout(() => addMessage(currentLang === 'ar' ? "تم استلام رسالتك" : "Message received", 'bot'), 1000);
         }
     }
 
     sendBtn.addEventListener('click', handleSend);
     msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSend(); });
 
-    // Settings Logic
     document.getElementById('openSettingsBtn').onclick = () => document.getElementById('settingsModal').style.display = 'flex';
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('settingsModal').style.display = 'none';
 
@@ -311,4 +299,3 @@
 </script>
 </body>
 </html>
-
