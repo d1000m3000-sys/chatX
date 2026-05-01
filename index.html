@@ -44,6 +44,7 @@ color:#fff;
 padding:12px;
 display:flex;
 justify-content:space-between;
+align-items:center;
 }
 
 .messages{
@@ -64,8 +65,13 @@ border-radius:12px;
 .me{align-self:flex-end;background:var(--chat-user);}
 .other{align-self:flex-start;background:var(--chat-bot);}
 
-.time{font-size:10px;opacity:.6;}
+.time{
+font-size:10px;
+opacity:.6;
+margin-top:5px;
+}
 
+/* input */
 .inputArea{
 display:flex;
 padding:10px;
@@ -88,6 +94,31 @@ background:#25D366;
 color:#fff;
 font-size:18px;
 }
+
+/* settings */
+.modal{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:#000000aa;
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.modalBox{
+background:white;
+padding:20px;
+border-radius:15px;
+width:80%;
+max-width:300px;
+}
+
+.modalBox button,select{
+width:100%;
+margin-top:10px;
+padding:10px;
+}
 </style>
 </head>
 
@@ -95,7 +126,7 @@ font-size:18px;
 
 <div class="header">
 💬 ChatX
-<button onclick="toggleMode()">🌓</button>
+<button onclick="openSettings()">⚙️</button>
 </div>
 
 <div id="chat" class="messages"></div>
@@ -103,6 +134,21 @@ font-size:18px;
 <div class="inputArea">
 <input id="msg" placeholder="اكتب رسالة...">
 <button onclick="send()" class="send">✈️</button>
+</div>
+
+<!-- settings -->
+<div id="settings" class="modal">
+  <div class="modalBox">
+    <h3>⚙️ Settings</h3>
+
+    <select onchange="changeLang(this.value)">
+      <option value="ar">العربية</option>
+      <option value="en">English</option>
+    </select>
+
+    <button onclick="toggleMode()">🌙 / ☀️ وضع ليلي</button>
+    <button onclick="closeSettings()">إغلاق</button>
+  </div>
 </div>
 
 <!-- Firebase -->
@@ -128,12 +174,33 @@ user="User_"+Math.floor(Math.random()*9999);
 localStorage.setItem("user",user);
 }
 
-// dark mode
+// settings
+function openSettings(){ settings.style.display="flex"; }
+function closeSettings(){ settings.style.display="none"; }
+
+// 🌍 language
+function changeLang(lang){
+localStorage.setItem("lang",lang);
+
+if(lang==="ar"){
+document.documentElement.dir="rtl";
+msg.placeholder="اكتب رسالة...";
+}else{
+document.documentElement.dir="ltr";
+msg.placeholder="Type message...";
+}
+}
+
+// load language
+let savedLang=localStorage.getItem("lang")||"ar";
+changeLang(savedLang);
+
+// 🌗 dark mode
 function toggleMode(){
 document.body.classList.toggle("dark");
 }
 
-// send
+// 📤 send
 function send(){
 let text=msg.value;
 if(!text.trim()) return;
@@ -147,7 +214,7 @@ time:Date.now()
 msg.value="";
 }
 
-// receive
+// 📥 receive
 db.collection("messages")
 .orderBy("time")
 .onSnapshot(snap=>{
@@ -159,9 +226,13 @@ let d=doc.data();
 let div=document.createElement("div");
 div.className="msg "+(d.user===user?"me":"other");
 
+let date=new Date(d.time);
+
+let fullDate=date.toLocaleDateString()+" "+date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
 div.innerHTML=`
 <div>${d.text}</div>
-<div class="time">${new Date(d.time).toLocaleTimeString()}</div>
+<div class="time">${fullDate}</div>
 `;
 
 chat.appendChild(div);
@@ -170,7 +241,7 @@ chat.appendChild(div);
 chat.scrollTop=chat.scrollHeight;
 });
 
-// 🔥 تسجيل Service Worker
+// PWA
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("sw.js");
 }
