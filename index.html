@@ -21,8 +21,13 @@
 --text:#111;
 }
 
+/* أوضاع الخلفية */
+.bg-white{ --bg-primary:#ffffff; }
+.bg-dark{ --bg-primary:#0a1014; }
+.bg-gray{ --bg-primary:#2a2a2a; }
+.bg-gold{ --bg-primary:#1f1a0d; }
+
 body.dark{
---bg-primary:#0a1014;
 --bg-header:#202c33;
 --chat-user:#005c4b;
 --chat-bot:#202c33;
@@ -69,6 +74,14 @@ border-radius:12px;
 font-size:10px;
 opacity:.6;
 margin-top:5px;
+}
+
+/* day label */
+.day{
+text-align:center;
+font-size:12px;
+opacity:.7;
+margin:10px 0;
 }
 
 /* input */
@@ -147,6 +160,16 @@ padding:10px;
     </select>
 
     <button onclick="toggleMode()">🌙 / ☀️ وضع ليلي</button>
+
+    <!-- الخلفيات -->
+    <select onchange="changeBg(this.value)">
+      <option value="">🎨 اختر الخلفية</option>
+      <option value="bg-white">ابيض</option>
+      <option value="bg-dark">اسود</option>
+      <option value="bg-gray">رصاصي</option>
+      <option value="bg-gold">ذهبي</option>
+    </select>
+
     <button onclick="closeSettings()">إغلاق</button>
   </div>
 </div>
@@ -178,7 +201,7 @@ localStorage.setItem("user",user);
 function openSettings(){ settings.style.display="flex"; }
 function closeSettings(){ settings.style.display="none"; }
 
-// 🌍 language
+// language
 function changeLang(lang){
 localStorage.setItem("lang",lang);
 
@@ -190,15 +213,25 @@ document.documentElement.dir="ltr";
 msg.placeholder="Type message...";
 }
 }
+changeLang(localStorage.getItem("lang")||"ar");
 
-// load language
-let savedLang=localStorage.getItem("lang")||"ar";
-changeLang(savedLang);
-
-// 🌗 dark mode
+// dark mode
 function toggleMode(){
 document.body.classList.toggle("dark");
 }
+
+// 🎨 background
+function changeBg(bg){
+document.body.classList.remove("bg-white","bg-dark","bg-gray","bg-gold");
+if(bg){
+document.body.classList.add(bg);
+localStorage.setItem("bg",bg);
+}
+}
+
+// load bg
+let savedBg=localStorage.getItem("bg");
+if(savedBg) document.body.classList.add(savedBg);
 
 // 📤 send
 function send(){
@@ -214,25 +247,42 @@ time:Date.now()
 msg.value="";
 }
 
-// 📥 receive
+// 📥 receive + day system
 db.collection("messages")
 .orderBy("time")
 .onSnapshot(snap=>{
 chat.innerHTML="";
 
+let lastDay="";
+
 snap.forEach(doc=>{
 let d=doc.data();
+let date=new Date(d.time);
+
+let dayLabel="";
+let today=new Date();
+
+if(date.toDateString()===today.toDateString()){
+dayLabel="Today";
+}else if(date.toDateString()===new Date(today-86400000).toDateString()){
+dayLabel="Yesterday";
+}else{
+dayLabel=date.toLocaleDateString();
+}
+
+if(dayLabel!==lastDay){
+chat.innerHTML+=`<div class="day">${dayLabel}</div>`;
+lastDay=dayLabel;
+}
 
 let div=document.createElement("div");
 div.className="msg "+(d.user===user?"me":"other");
 
-let date=new Date(d.time);
-
-let fullDate=date.toLocaleDateString()+" "+date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+let time=date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 
 div.innerHTML=`
 <div>${d.text}</div>
-<div class="time">${fullDate}</div>
+<div class="time">${time}</div>
 `;
 
 chat.appendChild(div);
