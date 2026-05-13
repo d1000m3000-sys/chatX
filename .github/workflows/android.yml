@@ -14,11 +14,15 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm install
+      - run: npm install -g @capacitor/cli
 
-      - run: npm install @capacitor/core @capacitor/cli @capacitor/android
+      - run: npm install @capacitor/core @capacitor/android
 
-      - run: npx cap init ChatX com.chatx.app --web-dir=.
+      - run: |
+          mkdir www
+          cp -r * www/ || true
+
+      - run: npx cap init ChatX com.chatx.app --web-dir=www
 
       - run: npx cap add android
 
